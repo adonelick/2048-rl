@@ -1,6 +1,10 @@
+/** 
+ * Written by Andrew Donelick
+ * EELE 577 - Advanced Digial Signal Processing
+ * Final Project
+ */
 
 #include "game.hpp"
-
 
 Game::Game()
     : score(0),
@@ -30,6 +34,7 @@ State Game::getState() const
 unsigned int Game::takeAction(Action a)
 {
     unsigned int reward;
+    bool invalidAction = false;
 
     if (a == UP) {
         reward = state.slideUp();
@@ -37,13 +42,18 @@ unsigned int Game::takeAction(Action a)
         reward = state.slideDown();
     } else if (a == LEFT) {
         reward = state.slideLeft();
-    } else {
+    } else if (a == RIGHT) {
         reward = state.slideRight();
+    } else {
+        reward = 0;
+        invalidAction = true;
     }
 
-    state.insertNewTile();
-    score += reward;
+    if (!invalidAction) {
+        state.insertNewTile();
+    }
 
+    score += reward;
     return reward;
 }
 
@@ -51,6 +61,7 @@ unsigned int Game::takeAction(Action a)
 unsigned int Game::takeAction(Action a, State& afterState)
 {
     unsigned int reward;
+    bool invalidAction = false;
 
     if (a == UP) {
         reward = state.slideUp();
@@ -58,12 +69,17 @@ unsigned int Game::takeAction(Action a, State& afterState)
         reward = state.slideDown();
     } else if (a == LEFT) {
         reward = state.slideLeft();
-    } else {
+    } else if (a == RIGHT) {
         reward = state.slideRight();
+    } else {
+        reward = 0;
+        invalidAction = true;
     }
 
     afterState = State(state);
-    state.insertNewTile();
+    if (!invalidAction) {
+        state.insertNewTile();
+    }
 
     score += reward;
     return reward;
@@ -81,8 +97,10 @@ unsigned int Game::pretendTakeAction(Action a, State& afterState) const
         reward = afterState.slideDown();
     } else if (a == LEFT) {
         reward = afterState.slideLeft();
-    } else {
+    } else if (a == RIGHT) {
         reward = afterState.slideRight();
+    } else {
+        reward = 0;
     }
 
     return reward;
