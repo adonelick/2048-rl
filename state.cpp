@@ -1,5 +1,7 @@
-/* Written by Andrew Donelicl
- * EELE 577 Final Project
+/** 
+ * Written by Andrew Donelick
+ * EELE 577 - Advanced Digial Signal Processing
+ * Final Project
  */
 
 #include <iostream>
