@@ -1,7 +1,13 @@
+/** 
+ * Written by Andrew Donelick
+ * EELE 577 - Advanced Digial Signal Processing
+ * Final Project
+ */
 
+#include "ntnn.hpp"
+ 
 #include <iostream>
 #include <cmath>
-#include "ntnn.hpp"
 
 using namespace std;
 
