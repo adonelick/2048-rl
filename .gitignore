@@ -1,3 +1,4 @@
 *.o
 play2048
 afterStateLearning
+*.csv
