@@ -34,6 +34,11 @@ private:
 
 public:
 
+    /**
+     * Constructor for the 2048 game
+     *
+     * :return: New 2048 game
+     */
     Game();
 
     /**
