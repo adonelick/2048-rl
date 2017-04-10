@@ -28,7 +28,7 @@
  * -------------------------
  
  * The tuples of the n-tuple network are literally tuples of these
- * indices, say, for example (1, 2, 3, 4). This would be a 4-tuple
+ * indices, say, for example (0, 1, 2, 3). This would be a 4-tuple
  * across the top row of the game board. 
  */
 class NTNN

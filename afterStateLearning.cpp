@@ -78,6 +78,9 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
 /**
  * This is the function which runs the program.
  *
+ * :param argc: Number of command line arguments
+ * :param argv: Command line arguments
+ *
  * :return: Error code (0 = no error)
  */
 int main(int argc, char **argv)
