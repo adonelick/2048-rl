@@ -20,53 +20,48 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 50000
-#define ALPHA 0.001
-#define NUM_EXPERIMENTS 30
+#define GAMES 10000
+#define ALPHA 0.01
+#define NUM_EXPERIMENTS 10
 
 
 /**
  * This function computes the best action to take given the current game
  * state, an array of possible actions, and the current value function. 
- * The function chooses the action which maximizes the sum of the value 
- * of the next afterstate and the obtained reward.
+ * The function chooses the action which maximizes value of the appropriate
+ * value function.
  *
  * :param state: Reference to the current state
  * :param actions: Array of available actions in the current state
  * :param numActions: Number of actions in the actions array
- * :param V: Current value function
+ * :param valueFunctions: Value functions (one for each action)
  *
  * :return: The best action to take in the current state
  */
-Action getBestAction(const State& state, Action* actions, int numActions, const NTNN& V)
+Action getBestAction(const State& state, Action* actions, int numActions, const NTNN& V_up, const NTNN& V_down, const NTNN& V_left, const NTNN& V_right)
 {
     Action bestAction;
     Action a;
     double bestValue = -numeric_limits<double>::infinity();
-
-    unsigned int reward;
     double value;
 
     for (int i = 0; i < numActions; ++i) {
         
         a = actions[i];
-        State afterState(state);
-
-        /* Compute the afterstate based on the action */
-        if (a == UP) {
-            reward = afterState.slideUp();
-        } else if (a == DOWN) {
-            reward = afterState.slideDown();
-        } else if (a == LEFT) {
-            reward = afterState.slideLeft();
-        } else {
-            reward = afterState.slideRight();
-        }
 
         /* Compute the value of the action, and check if 
          * the action compares favorably to previous results.
          */
-        value = double(reward) + V.evaluate(afterState);
+        if (a == UP) {
+            value = V_up.evaluate(state);
+        } else if (a == DOWN) {
+            value = V_down.evaluate(state);
+        } else if (a == LEFT) {
+            value = V_left.evaluate(state);
+        } else {
+            value = V_right.evaluate(state);
+        }
+
         if (value > bestValue) {
             bestValue = value;
             bestAction = a;
@@ -78,10 +73,23 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
 }
 
 
-void afterStateLearning(unsigned int* scores, bool* wins)
+/**
+ * This function runs the temporal difference learning algorithm on 
+ * the 2048 game afterstates. The scores and outcomes of the games which
+ * the algorithms played are stored in the give, pre-allocated arrays.
+ *
+ * :param scores: Array in which to scores of the games played
+ * :param wins: Array in which to store the games' outcomes (win/loss)
+ *
+ * :return: (None)
+ */
+void qLearning(unsigned int* scores, bool* wins)
 {
-    /* Declare the value function */
-    NTNN V(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    /* Declare the value functions (one for each action) */
+    NTNN V_up(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_down(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_left(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_right(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
 
     /* Add the tuples to the n-tuple regression network */
     unsigned int tuples[NUM_TUPLES][TUPLE_LENGTH] = {
@@ -96,10 +104,12 @@ void afterStateLearning(unsigned int* scores, bool* wins)
                                                       {10, 11, 14, 15}
                                                     };
     for (int i = 0; i < NUM_TUPLES; ++i) {
-        V.addTuple(tuples[i], TUPLE_LENGTH);
+        V_up.addTuple(tuples[i], TUPLE_LENGTH);
+        V_down.addTuple(tuples[i], TUPLE_LENGTH);
+        V_left.addTuple(tuples[i], TUPLE_LENGTH);
+        V_right.addTuple(tuples[i], TUPLE_LENGTH);
     }
 
-    
     Action actions[4];
     unsigned int numActions;
     
@@ -109,29 +119,35 @@ void afterStateLearning(unsigned int* scores, bool* wins)
         numActions = game.getActions(actions);
 
         State state;
-        State afterState;
         State nextState;
-        State nextAfterState;
+
         Action bestAction;
         Action nextBestAction;
         unsigned int reward;
-        unsigned int rNext;
 
         while (numActions > 0)
         {
             state = game.getState();
-            bestAction = getBestAction(state, actions, numActions, V);
+            bestAction = getBestAction(state, actions, numActions, V_up, V_down, V_left, V_right);
 
-            reward = game.takeAction(bestAction, afterState);
+            reward = game.takeAction(bestAction);
             nextState = game.getState();
             numActions = game.getActions(actions);
 
             /* Start the learning part of the algorithm */
             if (numActions > 0) {
-                nextBestAction = getBestAction(nextState, actions, numActions, V);
-                rNext = game.pretendTakeAction(nextBestAction, nextAfterState);
 
-                V.train(afterState, double(rNext) + V.evaluate(nextAfterState));
+                bestAction = getBestAction(nextState, actions, numActions, V_up, V_down, V_left, V_right);
+
+                if (bestAction == UP) {
+                    V_up.train(state, double(reward) + V_up.evaluate(nextState));
+                } else if (bestAction == DOWN) {
+                    V_down.train(state, double(reward) + V_down.evaluate(nextState));
+                } else if (bestAction == LEFT) {
+                    V_left.train(state, double(reward) + V_left.evaluate(nextState));
+                } else {
+                    V_right.train(state, double(reward) + V_right.evaluate(nextState));
+                }
             }
         }
 
@@ -143,10 +159,8 @@ void afterStateLearning(unsigned int* scores, bool* wins)
 
 /**
  * This is the function which runs the program. In this program.
- * we train an agent to play the game 2048 using Temporal Difference
- * learning applied to the game's afterstates. The afterstates are 
- * the game states after a move has been executed, but before a 
- * new tile has been inserted.
+ * we train an agent to play the game 2048 using Q-learning
+ * applied to the game's state-action pairs.
  *
  * :param argc: Number of command line arguments
  * :param argv: Command line arguments
@@ -165,16 +179,16 @@ int main(int argc, char **argv)
     {
 
         cout << "Experiment " << experiment << " / " << NUM_EXPERIMENTS << endl;
-        afterStateLearning(scores, wins);
+        qLearning(scores, wins);
 
         /* Create the names of the results files */
         ostringstream scoresFileName;
         scoresFileName << "results/"; 
-        scoresFileName << "TD_AS_" << GAMES << "_" << int(1000*ALPHA) << "_scores.csv";
+        scoresFileName << "Q_S_" << GAMES << "_" << int(1000*ALPHA) << "_scores.csv";
 
         ostringstream winsFileName;
         winsFileName << "results/"; 
-        winsFileName << "TD_AS_" << GAMES << "_" << int(1000*ALPHA) << "_wins.csv";
+        winsFileName << "Q_S_" << GAMES << "_" << int(1000*ALPHA) << "_wins.csv";
 
         /* Save the data to a csv file in the results folder */
         fstream scoresFile;
