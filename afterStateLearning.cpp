@@ -20,9 +20,9 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 50000
+#define GAMES 500000
 #define ALPHA 0.001
-#define NUM_EXPERIMENTS 30
+#define NUM_EXPERIMENTS 1
 
 
 /**
