@@ -29,7 +29,7 @@ using namespace std;
  * This function computes the best action to take given the current game
  * state, an array of possible actions, and the current value function. 
  * The function chooses the action which maximizes the sum of the value 
- * of the next afterstate and the obtained reward.
+ * of the next state and the obtained reward.
  *
  * :param state: Reference to the current state
  * :param actions: Array of available actions in the current state
@@ -48,6 +48,10 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
     unsigned int reward;
     double value;
 
+    State* nextStates[2*GRID_SIZE*GRID_SIZE];
+    double probabilities[2*GRID_SIZE*GRID_SIZE];
+    unsigned int numNextStates;
+
     for (int i = 0; i < numActions; ++i) {
         
         a = actions[i];
@@ -64,15 +68,12 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             reward = afterState.slideRight();
         }
 
-        State* nextStates[2*GRID_SIZE*GRID_SIZE];
-        double probabilities[2*GRID_SIZE*GRID_SIZE];
-        unsigned int numNextStates;
-
         numNextStates = afterState.getNextStates(nextStates, probabilities);
         value = double(reward);
 
         for (unsigned int j = 0; j < numNextStates; ++j) {
             value += probabilities[j]*V.evaluate(*(nextStates[j]));
+            /* Don't forget to free the memory! */
             delete nextStates[j];
         }
 
@@ -85,10 +86,11 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
     return bestAction;
 }
 
+
 /**
  * This function runs the temporal difference learning algorithm on 
- * the 2048 game afterstates. The scores and outcomes of the games which
- * the algorithms played are stored in the give, pre-allocated arrays.
+ * the 2048 game states. The scores and outcomes of the games which
+ * the algorithms played are stored in the given, pre-allocated arrays.
  *
  * :param scores: Array in which to scores of the games played
  * :param wins: Array in which to store the games' outcomes (win/loss)
@@ -116,7 +118,6 @@ void stateLearning(unsigned int* scores, bool* wins)
         V.addTuple(tuples[i], TUPLE_LENGTH);
     }
 
-    
     Action actions[4];
     unsigned int numActions;
     
@@ -136,10 +137,12 @@ void stateLearning(unsigned int* scores, bool* wins)
 
         while (numActions > 0)
         {
+            /* Use the agent's policy to take the next move */
             state = game.getState();
             bestAction = getBestAction(state, actions, numActions, V);
-
             reward = game.takeAction(bestAction, afterState);
+
+            /* Get the new state of the game after the move */
             nextState = game.getState();
             numActions = game.getActions(actions);
 
@@ -150,7 +153,6 @@ void stateLearning(unsigned int* scores, bool* wins)
         }
 
         /* Store the results from the game in the arrays */
-        cout << game.getScore() << endl;
         scores[gameIndex] = game.getScore();
         wins[gameIndex] = (game.getMaxTile() >= 2048);
     }
@@ -204,7 +206,7 @@ int main(int argc, char **argv)
             winsFile << wins[i];
 
             if (i != GAMES-1) {
-                scoresFile << "\n";
+                scoresFile << ", ";
                 winsFile << ", ";
             }
         }
