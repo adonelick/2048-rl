@@ -27,19 +27,12 @@ class Game
 private:
 
     /* Current score of the game */
-    unsigned int score;
+    unsigned int score = 0;
 
     /* Current state of the game */
     State state;
 
 public:
-
-    /**
-     * Constructor for the 2048 game
-     *
-     * :return: New 2048 game
-     */
-    Game();
 
     /**
      * Gets the current score for the game.

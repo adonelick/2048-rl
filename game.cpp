@@ -7,13 +7,6 @@
 #include "game.hpp"
 
 
-Game::Game()
-    : score(0),
-      state()
-{
-    // Nothing to do here...
-}
-
 
 unsigned int Game::getScore() const
 {
@@ -84,7 +77,7 @@ unsigned int Game::takeAction(Action a, State& afterState)
     /* Copy the state to the afterState variable (for return), and 
      * insert a tile if the action we took was a valid one.
      */
-    afterState = State(state);
+    afterState = State{state};
     if (validAction) {
         state.insertNewTile();
     }
@@ -127,10 +120,10 @@ unsigned int Game::getActions(Action actions[NUM_ACTIONS]) const
     /* Create some new variables to create and store afterstates 
      * for each of the game's four actions.
      */
-    State upState(state);
-    State downState(state);
-    State leftState(state);
-    State rightState(state);
+    State upState{state};
+    State downState{state};
+    State leftState{state};
+    State rightState{state};
 
     upState.slideUp();
     downState.slideDown();
