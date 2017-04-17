@@ -120,6 +120,43 @@ public:
      */
     unsigned int getTile(unsigned int row, unsigned int col) const;
 
+
+    /**
+     * Sets the value of a state's tile using the given row, column,
+     * and desired new value. The new value should be a power of 2 and
+     * an integer.
+     *
+     * :param row: Row of the tile of interest
+     * :param col: Column of the tile of interest
+     * :param value: New value of the tile located at (row, col)
+     *
+     * :return: Whether the value at (row, col) was updated
+     */
+    bool setTile(unsigned int row, unsigned int col, unsigned int value);
+
+    /**
+     * Gets the locations and numbers of all empty tiles in the current
+     * state. Locations are returned in the supplied arrays.
+     *
+     * :param rows: Row locations of the empty tiles
+     * :param cols: Column locations of the empty tiles
+     *
+     * :return: Number of empty tiles
+     */
+     unsigned int getEmptyTiles(unsigned int* rows, unsigned int* cols) const;
+
+    /**
+     * Gets the possible next states that can be reached from the current
+     * game state. The function also computes the probability of reaching
+     * each of the next possible states.
+     * 
+     * :param nextStates: Array of the possible next states
+     * :param probabilities: Probabilities corresponsing to each possible state
+     *
+     * :return: Number of possible next states
+     */
+    unsigned int getNextStates(State** nextStates, double* probabilities) const;
+
     /**
      * Overloaded relational operators for equality comparison
      *

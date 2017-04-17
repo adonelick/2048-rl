@@ -20,8 +20,8 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 500000
-#define ALPHA 0.001
+#define GAMES 10000
+#define ALPHA 0.01
 #define NUM_EXPERIMENTS 1
 
 
@@ -40,6 +40,7 @@ using namespace std;
  */
 Action getBestAction(const State& state, Action* actions, int numActions, const NTNN& V)
 {
+    State afterState;
     Action bestAction;
     Action a;
     double bestValue = -numeric_limits<double>::infinity();
@@ -50,7 +51,7 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
     for (int i = 0; i < numActions; ++i) {
         
         a = actions[i];
-        State afterState(state);
+        afterState = state;
 
         /* Compute the afterstate based on the action */
         if (a == UP) {
@@ -63,15 +64,22 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             reward = afterState.slideRight();
         }
 
-        /* Compute the value of the action, and check if 
-         * the action compares favorably to previous results.
-         */
-        value = double(reward) + V.evaluate(afterState);
+        State* nextStates[2*GRID_SIZE*GRID_SIZE];
+        double probabilities[2*GRID_SIZE*GRID_SIZE];
+        unsigned int numNextStates;
+
+        numNextStates = afterState.getNextStates(nextStates, probabilities);
+        value = double(reward);
+
+        for (unsigned int j = 0; j < numNextStates; ++j) {
+            value += probabilities[j]*V.evaluate(*(nextStates[j]));
+            delete nextStates[j];
+        }
+
         if (value > bestValue) {
             bestValue = value;
             bestAction = a;
         }
-
     }
 
     return bestAction;
@@ -87,7 +95,7 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
  *
  * :return: (None)
  */
-void afterStateLearning(unsigned int* scores, bool* wins)
+void stateLearning(unsigned int* scores, bool* wins)
 {
     /* Declare the value function */
     NTNN V(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
@@ -120,9 +128,9 @@ void afterStateLearning(unsigned int* scores, bool* wins)
         State state;
         State afterState;
         State nextState;
-        State nextAfterState;
+
         Action bestAction;
-        Action nextBestAction;
+
         unsigned int reward;
         unsigned int rNext;
 
@@ -137,14 +145,12 @@ void afterStateLearning(unsigned int* scores, bool* wins)
 
             /* Start the learning part of the algorithm */
             if (numActions > 0) {
-                nextBestAction = getBestAction(nextState, actions, numActions, V);
-                rNext = game.pretendTakeAction(nextBestAction, nextAfterState);
-
-                V.train(afterState, double(rNext) + V.evaluate(nextAfterState));
+                V.train(state, reward + V.evaluate(nextState));
             }
         }
 
         /* Store the results from the game in the arrays */
+        cout << game.getScore() << endl;
         scores[gameIndex] = game.getScore();
         wins[gameIndex] = (game.getMaxTile() >= 2048);
     }
@@ -175,16 +181,16 @@ int main(int argc, char **argv)
     {
 
         cout << "Experiment " << experiment << " / " << NUM_EXPERIMENTS << endl;
-        afterStateLearning(scores, wins);
+        stateLearning(scores, wins);
 
         /* Create the names of the results files */
         ostringstream scoresFileName;
         scoresFileName << "results/"; 
-        scoresFileName << "TD_AS_" << GAMES << "_" << int(1000*ALPHA) << "_scores.csv";
+        scoresFileName << "TD_S_" << GAMES << "_" << int(1000*ALPHA) << "_scores.csv";
 
         ostringstream winsFileName;
         winsFileName << "results/"; 
-        winsFileName << "TD_AS_" << GAMES << "_" << int(1000*ALPHA) << "_wins.csv";
+        winsFileName << "TD_S_" << GAMES << "_" << int(1000*ALPHA) << "_wins.csv";
 
         /* Save the data to a csv file in the results folder */
         fstream scoresFile;
@@ -198,7 +204,7 @@ int main(int argc, char **argv)
             winsFile << wins[i];
 
             if (i != GAMES-1) {
-                scoresFile << ", ";
+                scoresFile << "\n";
                 winsFile << ", ";
             }
         }

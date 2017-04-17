@@ -58,20 +58,9 @@ void State::insertNewTile()
     uniform_real_distribution<> dist(0, 1);
 
     /* Get the possible indices where we can insert a tile */
-    int rowIndices[GRID_SIZE*GRID_SIZE];
-    int colIndices[GRID_SIZE*GRID_SIZE];
-    int numZeros = 0;
-
-    for (int row = 0; row < GRID_SIZE; ++row) {
-        for (int col = 0; col < GRID_SIZE; ++col) {
-
-            if (grid[row][col] == 0) {
-                rowIndices[numZeros] = row;
-                colIndices[numZeros] = col;
-                numZeros++;
-            }
-        }
-    }
+    unsigned int rowIndices[GRID_SIZE*GRID_SIZE];
+    unsigned int colIndices[GRID_SIZE*GRID_SIZE];
+    unsigned int numZeros = getEmptyTiles(rowIndices, colIndices);
 
     /* Choose whether to insert a 2 or a 4 */
     unsigned int insertValue;
@@ -82,10 +71,10 @@ void State::insertNewTile()
     }
 
     /* Insert the value into one of the free spaces on the board */
-    int index = rand() % numZeros;
+    unsigned int index = rand() % numZeros;
 
-    int row = rowIndices[index];
-    int col = colIndices[index];
+    unsigned int row = rowIndices[index];
+    unsigned int col = colIndices[index];
     grid[row][col] = insertValue;
 
 }
@@ -262,6 +251,75 @@ void State::print() const
 unsigned int State::getTile(unsigned int row, unsigned int col) const
 {
     return grid[row][col];
+}
+
+
+bool State::setTile(unsigned int row, unsigned int col, unsigned int value)
+{
+    if (value % 2 == 0) {
+        grid[row][col] = value;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+unsigned int State::getEmptyTiles(unsigned int* rows, unsigned int* cols) const
+{
+    unsigned int numZeros = 0;
+
+    for (int row = 0; row < GRID_SIZE; ++row) {
+        for (int col = 0; col < GRID_SIZE; ++col) {
+
+            if (grid[row][col] == 0) {
+                rows[numZeros] = row;
+                cols[numZeros] = col;
+                numZeros++;
+            }
+        }
+    }
+
+    return numZeros;
+}
+
+
+unsigned int State::getNextStates(State** nextStates, double* probabilities) const
+{
+    State afterState = (*this);
+
+    unsigned int numNextStates = 0;
+    unsigned int numEmptyTiles;
+    unsigned int rowIndices[GRID_SIZE*GRID_SIZE];
+    unsigned int colIndices[GRID_SIZE*GRID_SIZE];
+
+    numEmptyTiles = afterState.getEmptyTiles(rowIndices, colIndices);
+
+    unsigned int row;
+    unsigned int col;
+    for (unsigned int i = 0; i < numEmptyTiles; ++i) {
+
+        row = rowIndices[i];
+        col = colIndices[i];
+
+        /* Insert the tile with value 2 */
+        afterState.setTile(row, col, 2);
+
+        nextStates[numNextStates] = new State(afterState);
+        probabilities[numNextStates] = TWO_PROBABILITY * (1.0/double(numEmptyTiles));
+        numNextStates++;
+
+        /* Insert the tile with value 4 */
+        afterState.setTile(row, col, 4);
+
+        nextStates[numNextStates] = new State(afterState);
+        probabilities[numNextStates] = (1-TWO_PROBABILITY) * (1.0/double(numEmptyTiles));;
+        numNextStates++;
+
+        afterState.setTile(row, col, 0);
+    }
+
+    return numNextStates;
 }
 
 
