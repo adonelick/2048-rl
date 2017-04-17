@@ -4,6 +4,7 @@
  * Final Project
  */
 
+#include <random>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -20,9 +21,9 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 10000
+#define GAMES 50000
 #define ALPHA 0.01
-#define NUM_EXPERIMENTS 10
+#define NUM_EXPERIMENTS 1
 
 
 /**
@@ -34,6 +35,7 @@ using namespace std;
  * :param state: Reference to the current state
  * :param actions: Array of available actions in the current state
  * :param numActions: Number of actions in the actions array
+ *  FIXME: Add documentation for the value functions
  * :param valueFunctions: Value functions (one for each action)
  *
  * :return: The best action to take in the current state
@@ -66,7 +68,11 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             bestValue = value;
             bestAction = a;
         }
+    }
 
+    /* FIXME: Check if we need this line AND nonzero weight initialization in the NTNN */
+    if (bestValue == 0) {
+        bestAction = static_cast<Action>(rand() % 4);
     }
 
     return bestAction;
@@ -74,8 +80,8 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
 
 
 /**
- * This function runs the temporal difference learning algorithm on 
- * the 2048 game afterstates. The scores and outcomes of the games which
+ * This function runs the Q-learning algorithm on the 2048 games state-action
+ * pairs. The scores and outcomes of the games which
  * the algorithms played are stored in the give, pre-allocated arrays.
  *
  * :param scores: Array in which to scores of the games played
@@ -119,38 +125,52 @@ void qLearning(unsigned int* scores, bool* wins)
         numActions = game.getActions(actions);
 
         State state;
+        State afterState;
         State nextState;
 
         Action bestAction;
         Action nextBestAction;
         unsigned int reward;
+        double vNext;
 
         while (numActions > 0)
         {
             state = game.getState();
             bestAction = getBestAction(state, actions, numActions, V_up, V_down, V_left, V_right);
 
-            reward = game.takeAction(bestAction);
+            reward = game.takeAction(bestAction, afterState);
             nextState = game.getState();
             numActions = game.getActions(actions);
 
             /* Start the learning part of the algorithm */
             if (numActions > 0) {
 
-                bestAction = getBestAction(nextState, actions, numActions, V_up, V_down, V_left, V_right);
+                nextBestAction = getBestAction(nextState, actions, numActions, V_up, V_down, V_left, V_right);
 
-                if (bestAction == UP) {
-                    V_up.train(state, double(reward) + V_up.evaluate(nextState));
-                } else if (bestAction == DOWN) {
-                    V_down.train(state, double(reward) + V_down.evaluate(nextState));
-                } else if (bestAction == LEFT) {
-                    V_left.train(state, double(reward) + V_left.evaluate(nextState));
+                if (nextBestAction == UP) {
+                    vNext = V_up.evaluate(nextState);
+                } else if (nextBestAction == DOWN) {
+                    vNext = V_down.evaluate(nextState);
+                } else if (nextBestAction == LEFT) {
+                    vNext = V_left.evaluate(nextState);
                 } else {
-                    V_right.train(state, double(reward) + V_right.evaluate(nextState));
+                    vNext = V_right.evaluate(nextState);
+                }
+
+                /* Use Q-Learning to update the value of the state-action pair */
+                if (bestAction == UP) {
+                    V_up.train(state, double(reward) + vNext);
+                } else if (bestAction == DOWN) {
+                    V_down.train(state, double(reward) + vNext);
+                } else if (bestAction == LEFT) {
+                    V_left.train(state, double(reward) + vNext);
+                } else {
+                    V_right.train(state, double(reward) + vNext);
                 }
             }
         }
 
+        cout << game.getScore() << endl;
         scores[gameIndex] = game.getScore();
         wins[gameIndex] = (game.getMaxTile() >= 2048);
     }
@@ -202,7 +222,7 @@ int main(int argc, char **argv)
             winsFile << wins[i];
 
             if (i != GAMES-1) {
-                scoresFile << ", ";
+                scoresFile << "\n";
                 winsFile << ", ";
             }
         }

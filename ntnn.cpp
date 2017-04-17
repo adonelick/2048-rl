@@ -71,6 +71,11 @@ double NTNN::evaluate(const State& state) const
     for (unsigned int i = 0; i < currentNumTuples; ++i) {
         weightIndex = getWeightIndex(state, i);
 
+        /* FIXME: Make this nonzero initialization optional */
+        if (weights[i][weightIndex] == 0) {
+            weights[i][weightIndex] = 10;
+        }
+
         /* If the weightIndex has never been seen before, the []
          * operator adds it in for us, with default value 0.0.
          */
