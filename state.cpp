@@ -305,14 +305,14 @@ unsigned int State::getNextStates(State** nextStates, double* probabilities) con
         /* Insert the tile with value 2 */
         afterState.setTile(row, col, 2);
 
-        nextStates[numNextStates] = new State(afterState);
+        nextStates[numNextStates] = new State{afterState};
         probabilities[numNextStates] = TWO_PROBABILITY * (1.0/double(numEmptyTiles));
         numNextStates++;
 
         /* Insert the tile with value 4 */
         afterState.setTile(row, col, 4);
 
-        nextStates[numNextStates] = new State(afterState);
+        nextStates[numNextStates] = new State{afterState};
         probabilities[numNextStates] = (1-TWO_PROBABILITY) * (1.0/double(numEmptyTiles));;
         numNextStates++;
 

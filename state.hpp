@@ -148,9 +148,11 @@ public:
     /**
      * Gets the possible next states that can be reached from the current
      * game state. The function also computes the probability of reaching
-     * each of the next possible states.
+     * each of the next possible states. Note: users calling this function
+     * will need to free the memory allocated in nextStates. Yeah, this is 
+     * kind of icky, but it works and I'm feeling lazy right now.
      * 
-     * :param nextStates: Array of the possible next states
+     * :param nextStates: Array of pointers to the possible next states
      * :param probabilities: Probabilities corresponsing to each possible state
      *
      * :return: Number of possible next states
