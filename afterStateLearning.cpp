@@ -20,7 +20,7 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 500000
+#define GAMES 500
 #define ALPHA 0.001
 #define NUM_EXPERIMENTS 1
 
@@ -50,7 +50,7 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
     for (int i = 0; i < numActions; ++i) {
         
         a = actions[i];
-        State afterState(state);
+        State afterState{state};
 
         /* Compute the afterstate based on the action */
         if (a == UP) {
@@ -71,16 +71,16 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             bestValue = value;
             bestAction = a;
         }
-
     }
 
     return bestAction;
 }
 
+
 /**
  * This function runs the temporal difference learning algorithm on 
  * the 2048 game afterstates. The scores and outcomes of the games which
- * the algorithms played are stored in the give, pre-allocated arrays.
+ * the algorithms played are stored in the given, pre-allocated arrays.
  *
  * :param scores: Array in which to scores of the games played
  * :param wins: Array in which to store the games' outcomes (win/loss)
