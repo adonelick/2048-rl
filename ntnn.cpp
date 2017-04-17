@@ -12,10 +12,29 @@
 using namespace std;
 
 NTNN::NTNN(unsigned int num, unsigned int length, double alpha)
-    : numTuples(num),
-      tupleLength(length),
-      currentNumTuples(0),
-      alpha(alpha)
+    : numTuples{num},
+      tupleLength{length},
+      alpha{alpha},
+      initializeWeights{false}
+{
+    /* Declare the array of pointers for the tuples */
+    tuples = new unsigned int*[numTuples];
+
+    /* Create the arrays for each individual tuple */
+    for (int i = 0; i < numTuples; ++i) {
+        tuples[i] = new unsigned int[tupleLength];
+    }
+
+    /* Dynamically create the array of hashmaps for the weights */
+    weights = new unordered_map<unsigned int, double>[numTuples];
+}
+
+
+NTNN::NTNN(unsigned int num, unsigned int length, double alpha, bool initializeWeights)
+    : numTuples{num},
+      tupleLength{length},
+      alpha{alpha},
+      initializeWeights{initializeWeights}
 {
     /* Declare the array of pointers for the tuples */
     tuples = new unsigned int*[numTuples];
@@ -71,9 +90,8 @@ double NTNN::evaluate(const State& state) const
     for (unsigned int i = 0; i < currentNumTuples; ++i) {
         weightIndex = getWeightIndex(state, i);
 
-        /* FIXME: Make this nonzero initialization optional */
-        if (weights[i][weightIndex] == 0) {
-            weights[i][weightIndex] = 10;
+        if (initializeWeights && (weights[i][weightIndex] == 0)) {
+            weights[i][weightIndex] = INITIAL_WEIGHTS;
         }
 
         /* If the weightIndex has never been seen before, the []

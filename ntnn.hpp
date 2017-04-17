@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include "state.hpp"
 
+#define INITIAL_WEIGHTS 10.0
+
 
 /**
  * This class implements an n-tuple regression network which
@@ -46,10 +48,13 @@ private:
     unsigned int tupleLength;
 
     /* Number of tuples currently in the network */
-    unsigned int currentNumTuples;
+    unsigned int currentNumTuples = 0;
 
     /* The learning rate */
     double alpha;
+
+    /* Whether the weights are initially zero, or the value INITIAL_WEIGHTS */
+    bool initializeWeights;
 
     /* An array of weight maps (one map per tuple) */
     std::unordered_map<unsigned int, double>* weights;
@@ -59,7 +64,8 @@ public:
     /**
      * This is the standard constructor for the n-tuple network. With this
      * constructor, you specify the number of tuples the network will use, 
-     * the length of each tuple, and the network's learning rate.
+     * the length of each tuple, and the network's learning rate. When using 
+     * this constructor, the initial weights are all set to zero.
      *
      * :param num: Number of tuples to be in the network
      * :param length: Length of each individual tuple
@@ -68,6 +74,20 @@ public:
      * :return: New n-tuple neural network
      */
     NTNN(unsigned int num, unsigned int length, double alpha);
+
+    /**
+     * This is the standard constructor for the n-tuple network. With this
+     * constructor, you specify the number of tuples the network will use, 
+     * the length of each tuple, and the network's learning rate.
+     *
+     * :param num: Number of tuples to be in the network
+     * :param length: Length of each individual tuple
+     * :param alpha: Learning rate of the network
+     * :param initializeWeights: Whether the network's weights are initially nonzero
+     *
+     * :return: New n-tuple neural network
+     */
+    NTNN(unsigned int num, unsigned int length, double alpha, bool initializeWeights);
 
     /**
     * This is simply the object destructor.
