@@ -9,8 +9,11 @@
 #include <sstream>
 #include <string>
 #include <limits>
+#include <future>
+#include <vector>
 #include <stdlib.h>
 #include <time.h>
+
 #include "state.hpp"
 #include "game.hpp"
 #include "ntnn.hpp"
@@ -23,6 +26,15 @@ using namespace std;
 #define GAMES 10000
 #define ALPHA 0.01
 #define NUM_EXPERIMENTS 1
+
+
+
+/* Declare a struct which is used to collect experiment results */
+struct Results
+{
+    vector<unsigned int> scores;
+    vector<bool> wins;
+};
 
 
 /**
@@ -92,13 +104,16 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
  * the 2048 game states. The scores and outcomes of the games which
  * the algorithms played are stored in the given, pre-allocated arrays.
  *
- * :param scores: Array in which to scores of the games played
- * :param wins: Array in which to store the games' outcomes (win/loss)
+ * :param reportProcess: Whether to print the progress of the experiment
  *
- * :return: (None)
+ * :return: The results of the experiment (wins and scores as a function of
+ *          number of games played)
  */
-void stateLearning(unsigned int* scores, bool* wins)
+Results stateLearning(bool reportProgress)
 {
+    /* Create the struct to store the experiment results */
+    Results results;
+
     /* Declare the value function */
     NTNN V(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
 
@@ -152,10 +167,23 @@ void stateLearning(unsigned int* scores, bool* wins)
             }
         }
 
-        /* Store the results from the game in the arrays */
-        scores[gameIndex] = game.getScore();
-        wins[gameIndex] = (game.getMaxTile() >= 2048);
+        /* If desired, print out the progress of the current experiment */
+        if (reportProgress) {
+            cout << "Percent Complete: ";
+            cout << 100.0*double(gameIndex + 1) / double(GAMES) << "\r" << flush;
+        }
+
+        /* Record the results of the current game */
+        results.scores.push_back(game.getScore());
+        results.wins.push_back((game.getMaxTile() >= 2048));
     }
+
+    /* Move the cursor to the next line */
+    if (reportProgress) {
+        cout << endl;
+    }
+
+    return results;
 }
 
 
@@ -179,11 +207,31 @@ int main(int argc, char **argv)
     unsigned int scores[GAMES];
     bool wins[GAMES];
 
-    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; ++experiment)
+    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; experiment += 4)
     {
 
         cout << "Experiment " << experiment << " / " << NUM_EXPERIMENTS << endl;
-        stateLearning(scores, wins);
+        
+        /* Run four experiments in parallel to speed up the data gathering process.
+         * First, we start the four training experiments in their own threads.
+         */
+        auto future1 = async(launch::async, stateLearning, true);
+        auto future2 = async(launch::async, stateLearning, false);
+        auto future3 = async(launch::async, stateLearning, false);
+        auto future4 = async(launch::async, stateLearning, false);
+
+        /* Wait for each experiment to finish execution */
+        future1.wait();
+        future2.wait();
+        future3.wait();
+        future4.wait();
+
+        /* Collect the results from each of the experiments */
+        Results experimentResults[4];
+        experimentResults[0] = future1.get();
+        experimentResults[1] = future2.get();
+        experimentResults[2] = future3.get();
+        experimentResults[3] = future4.get();
 
         /* Create the names of the results files */
         ostringstream scoresFileName;
@@ -200,21 +248,23 @@ int main(int argc, char **argv)
         scoresFile.open(scoresFileName.str(), ios::out | ios::app);
         winsFile.open(winsFileName.str(), ios::out | ios::app);
 
-        for (unsigned int i = 0; i < GAMES; ++i) {
+        for (unsigned int i = 0; i < 4; ++i) {
+            for (unsigned int j = 0; j < GAMES; ++j) {
 
-            scoresFile << scores[i];
-            winsFile << wins[i];
+                scoresFile << experimentResults[i].scores[j];
+                winsFile << experimentResults[i].wins[j];
 
-            if (i != GAMES-1) {
-                scoresFile << ", ";
-                winsFile << ", ";
+                if (j != GAMES-1) {
+                    scoresFile << ", ";
+                    winsFile << ", ";
+                }
             }
+
+            scoresFile << '\n';
+            winsFile << '\n';
         }
 
-        scoresFile << '\n';
         scoresFile.close();
-
-        winsFile << '\n';
         winsFile.close();
     }
 

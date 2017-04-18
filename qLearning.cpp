@@ -9,10 +9,10 @@
 #include <sstream>
 #include <string>
 #include <limits>
-#include <stdlib.h>
-#include <time.h>
 #include <future>
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 
 #include "state.hpp"
 #include "game.hpp"
