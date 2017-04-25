@@ -29,7 +29,7 @@ stateLearning: stateLearning.o game.o state.o ntnn.o
 	$(CC) $(CFLAGS) -o stateLearning stateLearning.o game.o state.o ntnn.o -lpthread
 
 clean:
-	$(RM) $(TARGET) *.o
+	$(RM) $(TARGETS) *.o
 
 
 # Define the dependencies for each of the classes
