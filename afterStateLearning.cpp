@@ -1,6 +1,6 @@
 /** 
  * Written by Andrew Donelick
- * EELE 577 - Advanced Digial Signal Processing
+ * EELE 577 - Advanced Digital Signal Processing
  * Final Project
  */
 
@@ -13,6 +13,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <time.h>
+#include <cmath>
 
 #include "state.hpp"
 #include "game.hpp"
@@ -23,8 +24,8 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 1000
-#define ALPHA 0.01
+#define GAMES 50000
+#define ALPHA 0.0025
 #define NUM_EXPERIMENTS 4
 
 
@@ -75,6 +76,11 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             reward = afterState.slideRight();
         }
 
+        if (reward != 0)
+        {
+            reward = log2(reward);
+        }
+
         /* Compute the value of the action, and check if 
          * the action compares favorably to previous results.
          */
@@ -94,12 +100,10 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
  * the 2048 game afterstates. The scores and outcomes of the games which
  * the algorithms played are stored in the given, pre-allocated arrays.
  *
- * :param reportProcess: Whether to print the progress of the experiment
- *
  * :return: The results of the experiment (wins and scores as a function of
  *          number of games played)
  */
-Results afterStateLearning(bool reportProgress)
+Results afterStateLearning()
 {
     /* Create the struct to store the experiment results */
     Results results;
@@ -140,6 +144,7 @@ Results afterStateLearning(bool reportProgress)
         Action nextBestAction;
         unsigned int reward;
         unsigned int rNext;
+        double valueUpdate;
 
         while (numActions > 0)
         {
@@ -155,14 +160,25 @@ Results afterStateLearning(bool reportProgress)
                 nextBestAction = getBestAction(nextState, actions, numActions, V);
                 rNext = game.pretendTakeAction(nextBestAction, nextAfterState);
 
-                V.train(afterState, double(rNext) + V.evaluate(nextAfterState));
+                if (rNext != 0)
+                {
+                    rNext = log2(rNext);
+                }
+
+                valueUpdate = double(rNext) + V.evaluate(nextAfterState);
+                V.train(afterState, valueUpdate);
+            } else {
+                V.train(afterState, -50.0);
             }
         }
 
-        /* If desired, print out the progress of the current experiment */
-        if (reportProgress) {
+        /* Print out the progress of the current experiment */
+        if (gameIndex % 10 == 0)
+        {
             cout << "Percent Complete: ";
-            cout << 100.0*double(gameIndex + 1) / double(GAMES) << "\r" << flush;
+            cout << 100.0*double(gameIndex + 1) / double(GAMES);
+            cout << "; Game score: " << game.getScore() << "   ";
+            cout << "\r" << flush;
         }
 
         /* Record the results of the current game */
@@ -171,9 +187,7 @@ Results afterStateLearning(bool reportProgress)
     }
 
     /* Move the cursor to the next line */
-    if (reportProgress) {
-        cout << endl;
-    }
+    cout << endl;
 
     return results;
 }
@@ -199,31 +213,13 @@ int main(int argc, char **argv)
     unsigned int scores[GAMES];
     bool wins[GAMES];
 
-    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; experiment += 4)
+    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; ++experiment)
     {
 
         cout << "Experiment " << experiment << " / " << NUM_EXPERIMENTS << endl;
 
-        /* Run four experiments in parallel to speed up the data gathering process.
-         * First, we start the four training experiments in their own threads.
-         */
-        auto future1 = async(launch::async, afterStateLearning, true);
-        auto future2 = async(launch::async, afterStateLearning, false);
-        auto future3 = async(launch::async, afterStateLearning, false);
-        auto future4 = async(launch::async, afterStateLearning, false);
-
-        /* Wait for each experiment to finish execution */
-        future1.wait();
-        future2.wait();
-        future3.wait();
-        future4.wait();
-
         /* Collect the results from each of the experiments */
-        Results experimentResults[4];
-        experimentResults[0] = future1.get();
-        experimentResults[1] = future2.get();
-        experimentResults[2] = future3.get();
-        experimentResults[3] = future4.get();
+        Results experimentResults = afterStateLearning();
 
         /* Create the names of the results files */
         ostringstream scoresFileName;
@@ -240,21 +236,19 @@ int main(int argc, char **argv)
         scoresFile.open(scoresFileName.str(), ios::out | ios::app);
         winsFile.open(winsFileName.str(), ios::out | ios::app);
 
-        for (unsigned int i = 0; i < 4; ++i) {
-            for (unsigned int j = 0; j < GAMES; ++j) {
+        for (unsigned int i = 0; i < GAMES; ++i) {
 
-                scoresFile << experimentResults[i].scores[j];
-                winsFile << experimentResults[i].wins[j];
+            scoresFile << experimentResults.scores[i];
+            winsFile << experimentResults.wins[i];
 
-                if (j != GAMES-1) {
-                    scoresFile << ", ";
-                    winsFile << ", ";
-                }
+            if (i != GAMES-1) {
+                scoresFile << ", ";
+                winsFile << ", ";
             }
-
-            scoresFile << '\n';
-            winsFile << '\n';
         }
+
+        scoresFile << '\n';
+        winsFile << '\n';
 
         scoresFile.close();
         winsFile.close();

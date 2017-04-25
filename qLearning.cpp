@@ -1,6 +1,6 @@
 /** 
  * Written by Andrew Donelick
- * EELE 577 - Advanced Digial Signal Processing
+ * EELE 577 - Advanced Digital Signal Processing
  * Final Project
  */
 
@@ -9,8 +9,8 @@
 #include <sstream>
 #include <string>
 #include <limits>
-#include <future>
 #include <vector>
+#include <cmath>
 #include <stdlib.h>
 #include <time.h>
 
@@ -23,7 +23,7 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 100
+#define GAMES 10000
 #define ALPHA 0.01
 #define NUM_EXPERIMENTS 4
 
@@ -80,6 +80,10 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
             bestValue = value;
             bestAction = a;
         }
+
+        if (bestValue == 0) {
+            bestAction = static_cast<Action>(int(rand() & 4));
+        }
     }
 
     return bestAction;
@@ -91,21 +95,19 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
  * pairs. The scores and outcomes of the games which the agent plays are 
  * returned. Each set of games played by the agent is called an experiment.
  *
- * :param reportProcess: Whether to print the progress of the experiment
- *
  * :return: The results of the experiment (wins and scores as a function of
  *          number of games played)
  */
-Results qLearning(bool reportProgress)
+Results qLearning()
 {
     /* Create the struct to store the experiment results */
     Results results;
 
     /* Declare the value functions (one for each action) */
-    NTNN V_up(NUM_TUPLES, TUPLE_LENGTH, ALPHA, true);
-    NTNN V_down(NUM_TUPLES, TUPLE_LENGTH, ALPHA, true);
-    NTNN V_left(NUM_TUPLES, TUPLE_LENGTH, ALPHA, true);
-    NTNN V_right(NUM_TUPLES, TUPLE_LENGTH, ALPHA, true);
+    NTNN V_up(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_down(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_left(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
+    NTNN V_right(NUM_TUPLES, TUPLE_LENGTH, ALPHA);
 
     /* Add the tuples to the n-tuple regression networks */
     unsigned int tuples[NUM_TUPLES][TUPLE_LENGTH] = {
@@ -172,7 +174,14 @@ Results qLearning(bool reportProgress)
                     vNext = V_right.evaluate(nextState);
                 }
 
+                //vNext *= 0.8;
+
                 /* Use Q-Learning to update the value of the state-action pair */
+
+                if (reward != 0) {
+                    reward = log2(reward);
+                }
+
                 if (bestAction == UP) {
                     V_up.train(state, double(reward) + vNext);
                 } else if (bestAction == DOWN) {
@@ -185,10 +194,13 @@ Results qLearning(bool reportProgress)
             }
         }
 
-        /* If desired, print out the progress of the current experiment */
-        if (reportProgress) {
+        /* Print out the progress of the current experiment */
+        if (gameIndex % 10 == 0)
+        {
             cout << "Percent Complete: ";
-            cout << 100.0*double(gameIndex + 1) / double(GAMES) << "\r" << flush;
+            cout << 100.0*double(gameIndex + 1) / double(GAMES);
+            cout << "; Game score: " << game.getScore() << "   ";
+            cout << "\r" << flush;
         }
 
         /* Record the results of the current game */
@@ -197,9 +209,7 @@ Results qLearning(bool reportProgress)
     }
 
     /* Move the cursor to the next line */
-    if (reportProgress) {
-        cout << endl;
-    }
+    cout << endl;
 
     return results;
 }
@@ -220,31 +230,14 @@ int main(int argc, char **argv)
     /* Initialize the random seed */
     srand(time(NULL));
 
-    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; experiment += 4)
+    for (int experiment = 1; experiment <= NUM_EXPERIMENTS; ++experiment)
     {
 
         cout << "Experiment " << experiment << " / " << NUM_EXPERIMENTS << endl;
 
-        /* Run four experiments in parallel to speed up the data gathering process.
-         * First, we start the four training experiments in their own threads.
-         */
-        auto future1 = async(launch::async, qLearning, true);
-        auto future2 = async(launch::async, qLearning, false);
-        auto future3 = async(launch::async, qLearning, false);
-        auto future4 = async(launch::async, qLearning, false);
-
-        /* Wait for each experiment to finish execution */
-        future1.wait();
-        future2.wait();
-        future3.wait();
-        future4.wait();
-
         /* Collect the results from each of the experiments */
-        Results experimentResults[4];
-        experimentResults[0] = future1.get();
-        experimentResults[1] = future2.get();
-        experimentResults[2] = future3.get();
-        experimentResults[3] = future4.get();
+        Results experimentResults = qLearning();
+
 
         /* Create the names of the results files */
         ostringstream scoresFileName;
@@ -261,21 +254,19 @@ int main(int argc, char **argv)
         scoresFile.open(scoresFileName.str(), ios::out | ios::app);
         winsFile.open(winsFileName.str(), ios::out | ios::app);
 
-        for (unsigned int i = 0; i < 4; ++i) {
-            for (unsigned int j = 0; j < GAMES; ++j) {
+        for (unsigned int i = 0; i < GAMES; ++i) {
 
-                scoresFile << experimentResults[i].scores[j];
-                winsFile << experimentResults[i].wins[j];
+            scoresFile << experimentResults.scores[i];
+            winsFile << experimentResults.wins[i];
 
-                if (j != GAMES-1) {
-                    scoresFile << ", ";
-                    winsFile << ", ";
-                }
+            if (i != GAMES-1) {
+                scoresFile << ", ";
+                winsFile << ", ";
             }
-
-            scoresFile << '\n';
-            winsFile << '\n';
         }
+
+        scoresFile << '\n';
+        winsFile << '\n';
 
         scoresFile.close();
         winsFile.close();
