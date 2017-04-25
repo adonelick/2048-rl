@@ -11,10 +11,12 @@ learningAlgorithm = 'None';
 stateType = 'None';
 plotType = 'None';
 
-if filenameParts{1} == 'TD'
+if strcmp(filenameParts{1}, 'TD')
     learningAlgorithm = 'Temporal Difference Learning';
-elseif filenameParts{1} == 'Q'
+elseif strcmp(filenameParts{1}, 'Q')
     learningAlgorithm = 'Q-Learning';
+elseif strcmp(filenameParts{1}, 'EG')
+    learningAlgorithm = 'Epsilon-Greedy';
 end
 
 if filenameParts{2} == 'AS'
@@ -38,23 +40,26 @@ rawData = csvread(dataFile);
 
 averageScores = zeros(1, numGames);
 for i = 1:(n*m/numGames)
-    if (n == 1)
-        averageScores = averageScores + rawData(numGames*(i-1)+1:numGames*i);
+    if (m == 1)
+        averageScores(:) = averageScores(:) + rawData(numGames*(i-1)+1:numGames*i);
     else
         averageScores = averageScores + rawData(i, :);
     end
 end
 
 averageScores = averageScores ./ (n*m/numGames);
-averageScores = filter(0.01*ones(1, 100), 1, averageScores);
+%averageScores = filter(0.01*ones(1, 100), 1, averageScores);
 
 % rawData(2, :) = filter(0.01*ones(1, 100), 1, rawData(2, :));
 % rawData(3, :) = filter(0.01*ones(1, 100), 1, rawData(3, :));
 % rawData(4, :) = filter(0.01*ones(1, 100), 1, rawData(4, :));
 
-plotTitle = [stateType, ' ', learningAlgorithm];
-plotTitle = [plotTitle, '; Learning Rate ', num2str(learningRate)];
+if strcmp(learningAlgorithm, 'Epsilon-Greedy')
+    plotTitle = ['Epsilon Greedy Agent; \epsilon = ', num2str(learningRate)];
+else
+    plotTitle = [stateType, ' ', learningAlgorithm];
+    plotTitle = [plotTitle, '; \alpha = ', num2str(learningRate)];
+end
 
-%plot(1:10000, rawData(2, :), 1:10000, rawData(3, :), 1:10000, rawData(4, :));
 plot(averageScores);
 title(plotTitle);

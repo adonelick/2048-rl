@@ -5,4 +5,4 @@ afterStateLearning
 qLearning
 stateLearning
 *.m~
-
+epsilonGreedy
