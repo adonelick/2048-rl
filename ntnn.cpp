@@ -104,9 +104,9 @@ double NTNN::evaluate(const State& state) const
 }
 
 
-void NTNN::train(const State& state, double value)
+void NTNN::train(const State& state, double update)
 {
-    double weightChange = alpha*(value - evaluate(state));
+    double weightChange = alpha*(update - evaluate(state));
     unsigned int weightIndex;
 
     for (unsigned int i = 0; i < currentNumTuples; ++i) {
@@ -130,8 +130,8 @@ unsigned int NTNN::getWeightIndex(const State& state, unsigned int tuple) const
     for (int i = 0; i < tupleLength; ++i) {
 
         /* Convert the index given in the tuple to row/column for the grid */
-        row = tuples[tuple][i] / tupleLength;
-        col = tuples[tuple][i] % tupleLength;
+        row = tuples[tuple][i] / GRID_SIZE;
+        col = tuples[tuple][i] % GRID_SIZE;
 
         if (state.getTile(row, col) != 0) {
             weightIndex += pow(100, i)*log2(state.getTile(row, col));

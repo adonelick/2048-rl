@@ -123,11 +123,11 @@ public:
      * value, and the network updates its weights accordingly.
      *
      * :param state: State on which to train the network
-     * :param value: Corresponding value of the given state
+     * :param update: Value update to be given to the given state
      *
      * :return: (None)
      */
-    void train(const State& state, double value);
+    void train(const State& state, double update);
 
 private:
 
