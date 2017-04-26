@@ -6,3 +6,4 @@ qLearning
 stateLearning
 *.m~
 epsilonGreedy
+*.nfs*
