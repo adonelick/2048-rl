@@ -230,6 +230,9 @@ int main(int argc, char **argv)
     /* Initialize the random seed */
     srand(time(NULL));
 
+    cout << "Learning Rate: " << ALPHA << endl;
+    cout << "Number of Games per Experiment: " << GAMES << endl;
+
     for (int experiment = 1; experiment <= NUM_EXPERIMENTS; ++experiment)
     {
 

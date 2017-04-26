@@ -167,8 +167,8 @@ int main(int argc, char **argv)
     /* Initialize the random seed */
     srand(time(NULL));
 
-    unsigned int scores[GAMES];
-    bool wins[GAMES];
+    cout << "Learning Rate: " << ALPHA << endl;
+    cout << "Number of Games per Experiment: " << GAMES << endl;
 
     for (int experiment = 1; experiment <= NUM_EXPERIMENTS; ++experiment)
     {
