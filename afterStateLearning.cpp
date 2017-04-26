@@ -168,7 +168,7 @@ Results afterStateLearning()
                 valueUpdate = double(rNext) + V.evaluate(nextAfterState);
                 V.train(afterState, valueUpdate);
             } else {
-	        V.train(afterState, -50.0);
+                V.train(afterState, -50.0);
             }
         }
 
