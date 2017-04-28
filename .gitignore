@@ -1,9 +1,10 @@
 *.o
+*.png
+*.csv
+*.m~
+*.nfs*
 play2048
 afterStateLearning
-*.csv
 qLearning
 stateLearning
-*.m~
 epsilonGreedy
-*.nfs*

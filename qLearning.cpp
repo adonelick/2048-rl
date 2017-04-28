@@ -23,7 +23,7 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 10000
+#define GAMES 100000
 #define ALPHA 0.01
 #define NUM_EXPERIMENTS 4
 
@@ -79,10 +79,6 @@ Action getBestAction(const State& state, Action* actions, int numActions, const 
         if (value > bestValue) {
             bestValue = value;
             bestAction = a;
-        }
-
-        if (bestValue == 0) {
-            bestAction = static_cast<Action>(int(rand() & 4));
         }
     }
 
@@ -190,6 +186,16 @@ Results qLearning()
                     V_left.train(state, double(reward) + vNext);
                 } else {
                     V_right.train(state, double(reward) + vNext);
+                }
+            } else {
+                if (bestAction == UP) {
+                    V_up.train(state, -50.0);
+                } else if (bestAction == DOWN) {
+                    V_down.train(state, -50.0);
+                } else if (bestAction == LEFT) {
+                    V_left.train(state, -50.0);
+                } else {
+                    V_right.train(state, -50.0);
                 }
             }
         }

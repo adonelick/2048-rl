@@ -163,6 +163,8 @@ Results stateLearning()
             if (numActions > 0) {
                 valueUpdate = double(reward) + V.evaluate(nextState);
                 V.train(state, valueUpdate);
+            } else {
+                V.train(state, -50.0);
             }
         }
 

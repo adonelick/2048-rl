@@ -48,7 +48,7 @@ for i = 1:(n*m/numGames)
 end
 
 averageScores = averageScores ./ (n*m/numGames);
-%averageScores = filter(0.01*ones(1, 100), 1, averageScores);
+averageScores = filter(0.01*ones(1, 100), 1, averageScores);
 
 % rawData(2, :) = filter(0.01*ones(1, 100), 1, rawData(2, :));
 % rawData(3, :) = filter(0.01*ones(1, 100), 1, rawData(3, :));
@@ -61,5 +61,13 @@ else
     plotTitle = [plotTitle, '; \alpha = ', num2str(learningRate)];
 end
 
+if strcmp(plotType, 'Scores')
+    y_label = 'Game Score';
+else
+    y_label = 'Win Rate';
+end
+
 plot(averageScores);
 title(plotTitle);
+xlabel('Training Games');
+ylabel(y_label);
