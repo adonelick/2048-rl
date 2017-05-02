@@ -9,7 +9,6 @@
 #include <sstream>
 #include <string>
 #include <limits>
-#include <future>
 #include <vector>
 #include <stdlib.h>
 #include <time.h>
@@ -24,9 +23,9 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
-#define GAMES 200000
-#define ALPHA 0.002
-#define NUM_EXPERIMENTS 4
+#define GAMES 100000
+#define ALPHA 0.005
+#define NUM_EXPERIMENTS 1
 
 
 
@@ -167,8 +166,10 @@ Results afterStateLearning()
 
                 valueUpdate = double(rNext) + V.evaluate(nextAfterState);
                 V.train(afterState, valueUpdate);
+                
             } else {
-                V.train(afterState, -50.0);
+                valueUpdate = -50.0;
+                V.train(afterState, valueUpdate);
             }
         }
 
