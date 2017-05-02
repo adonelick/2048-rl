@@ -8,8 +8,10 @@
 #define NTNN_H 1
 
 #include <unordered_map>
+#include <string>
 #include "state.hpp"
 
+/* These weights are used if nonzero intialization is used */
 #define INITIAL_WEIGHTS 10.0
 
 
@@ -90,8 +92,8 @@ public:
     NTNN(unsigned int num, unsigned int length, double alpha, bool initializeWeights);
 
     /**
-    * This is simply the object destructor.
-    */
+     * This is simply the object destructor.
+     */
     ~NTNN();
 
     /**
@@ -128,6 +130,28 @@ public:
      * :return: (None)
      */
     void train(const State& state, double update);
+
+    /**
+     * This function allows you to load the weights contained within the 
+     * network to the specified file.
+     *
+     * :param agentFile: path to the file from which we want to load the weights
+     *
+     * :return: (None)
+     */
+    void load(const std::string& agentFile);
+
+    /**
+     * This function allows you to save the weights contained within the 
+     * network to the specified file. The weights are written out to the file
+     * in the order that the tuples were added to the network.
+     *
+     * :param agentFile: path to the file to which we want to svae the weights
+     *
+     * :return: (None)
+     */
+    void save(const std::string& agentFile);
+
 
 private:
 

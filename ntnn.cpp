@@ -7,6 +7,8 @@
 #include "ntnn.hpp"
  
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 
 using namespace std;
@@ -139,4 +141,64 @@ unsigned int NTNN::getWeightIndex(const State& state, unsigned int tuple) const
     }
 
     return weightIndex;
+}
+
+
+void NTNN::load(const string& agentFile)
+{
+    fstream agent;
+    agent.open(agentFile, ios::in);
+
+    string line;
+    unsigned int tuple = 0;
+    unsigned int weightIndex;
+    double value;
+
+    if (agent.is_open()) {
+
+        while (getline(agent, line))
+        {
+            if (line == "-1, -1") {
+                tuple++;
+            } else {
+
+                string stringKey = line.substr(0, line.find(", "));
+                string stringValue = line.erase(0, line.find(", ") + 2);
+
+                stringstream keyConversion{stringKey};
+                stringstream valueConversion{stringValue};
+
+                keyConversion >> weightIndex;
+                valueConversion >> value;
+
+                weights[tuple][weightIndex] = value;
+            }
+        }
+    }
+}
+
+
+void NTNN::save(const string& agentFile)
+{
+    fstream agent;
+    agent.open(agentFile, ios::out | ios::trunc);
+
+    /* Loop throough each tuple, and dump all weights associated with
+     * that tuple to the file.
+     */
+    for (unsigned int i = 0; i < currentNumTuples; ++i) {
+
+        for (auto const& element : weights[i]) {
+
+            agent << element.first;
+            agent << ", ";
+            agent << element.second;
+            agent << "\n";
+        }
+
+        /* We assume that this line represents the division between tuples */
+        agent << "-1, -1\n";
+    }
+
+    agent.close();
 }
