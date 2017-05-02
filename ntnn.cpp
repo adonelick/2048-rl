@@ -1,6 +1,6 @@
 /** 
  * Written by Andrew Donelick
- * EELE 577 - Advanced Digial Signal Processing
+ * EELE 577 - Advanced Digital Signal Processing
  * Final Project
  */
 

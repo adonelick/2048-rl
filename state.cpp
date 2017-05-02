@@ -100,7 +100,12 @@ unsigned int State::getMaxTile() const
 
 unsigned int State::slideUp()
 {
-
+    /**
+     * This code is quite similar to the action code used by
+     * Szubert and Jaskowski in their 2048 project. 
+     * You can find the original code here:
+     * https://github.com/mszubert/2048
+     */
     unsigned int reward = 0;
 
     for (int col = 0; col < 4; ++col) {
@@ -134,6 +139,11 @@ unsigned int State::slideUp()
 
 unsigned int State::slideDown()
 {
+    /**
+     * This member function is basically the same idea as for 
+     * the slideUp() member function, but we push and combine 
+     * the tiles in a different direction.
+     */
     unsigned int reward = 0;
 
     for (int col = 0; col < GRID_SIZE; ++col) {
@@ -167,6 +177,11 @@ unsigned int State::slideDown()
 
 unsigned int State::slideRight()
 {
+    /**
+     * This member function is basically the same idea as for 
+     * the slideUp() member function, but we push and combine 
+     * the tiles in a different direction.
+     */
     unsigned int reward = 0;
 
     for (int row = 0; row < GRID_SIZE; ++row) {
@@ -200,6 +215,11 @@ unsigned int State::slideRight()
 
 unsigned int State::slideLeft()
 {
+    /**
+     * This member function is basically the same idea as for 
+     * the slideUp() member function, but we push and combine 
+     * the tiles in a different direction.
+     */
     unsigned int reward = 0;
 
     for (int row = 0; row < 4; ++row) {
@@ -256,6 +276,7 @@ unsigned int State::getTile(unsigned int row, unsigned int col) const
 
 bool State::setTile(unsigned int row, unsigned int col, unsigned int value)
 {
+    /* Remember, we only want to the value if the value is a power of 2 */
     if (value % 2 == 0) {
         grid[row][col] = value;
         return true;

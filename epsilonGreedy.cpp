@@ -22,6 +22,11 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
+/* These values are the parameters that define an experiment.
+ * GAMES: The number of games per trial
+ * EPSILON: The probability of selecting a non-greedy action
+ * NUM_EXPERIMENTS: The number of trials to run
+ */
 #define GAMES 200000
 #define EPSILON 0.0
 #define NUM_EXPERIMENTS 30
@@ -204,6 +209,7 @@ int main(int argc, char **argv)
             }
         }
 
+        /* Close the files when done writing to them */
         scoresFile << '\n';
         winsFile << '\n';
 

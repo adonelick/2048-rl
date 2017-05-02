@@ -22,6 +22,11 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
+/* These values are the parameters that define an experiment.
+ * GAMES: The number of games per trial
+ * ALPHA: The NTNN's learning rate
+ * NUM_EXPERIMENTS: The number of trials to run
+ */
 #define GAMES 100000
 #define ALPHA 0.01
 #define NUM_EXPERIMENTS 4
@@ -192,9 +197,7 @@ Results stateLearning()
 /**
  * This is the function which runs the program. In this program.
  * we train an agent to play the game 2048 using Temporal Difference
- * learning applied to the game's afterstates. The afterstates are 
- * the game states after a move has been executed, but before a 
- * new tile has been inserted.
+ * learning applied to the game's states. 
  *
  * :param argc: Number of command line arguments
  * :param argv: Command line arguments
@@ -243,6 +246,7 @@ int main(int argc, char **argv)
             }
         }
 
+        /* Close the files when done writing to them */
         scoresFile << '\n';
         winsFile << '\n';
 

@@ -24,11 +24,24 @@ using namespace std;
 #define NUM_TUPLES 17
 #define TUPLE_LENGTH 4
 
+/* These values are the parameters that define an experiment.
+ *
+ * GAMES: The number of games per trial
+ * ALPHA: The NTNN's learning rate
+ * SHOW_GAME: Whether or not the you can see the agent play the game
+ * NEW_AGENT: Do you want to start a new agent from scratch (true), or load
+ *            an existing agent from disk (false)?
+ * AGENT_FILE: The file in which you wish to save the agent's value function
+ * SCORES_FILE: The file in which you wish to save the agent's game scores
+ * WINS_FILE: The file in which you wish to save the agent's game wins
+ * SAVE_INTERVAL: How many games must pass before the agent, as well as the 
+ *                scores and wins, are saved to disk?
+ */
 #define GAMES 10000000
 #define ALPHA 0.0001
 #define SHOW_GAME false
 #define NEW_AGENT false
-#define AGENT_FILE "agents/TD_AS_AGENT_MODIFIED.csv"
+#define AGENT_FILE "agents/TD_AS_AGENT.csv"
 #define SCORES_FILE "results/TD_AS_0_0_scores.csv"
 #define WINS_FILE "results/TD_AS_0_0_wins.csv"
 #define SAVE_INTERVAL 1000
