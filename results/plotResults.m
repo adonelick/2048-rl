@@ -32,11 +32,16 @@ elseif strcmp(filenameParts{5}, 'wins.csv')
 end
 
 numGames = str2double(filenameParts{3});
+
 learningRate = str2double(filenameParts{4}) / 1000;
 
 % Load the data from the data file
 rawData = csvread(dataFile);
 [n, m] = size(rawData);
+
+if (numGames == 0) && (m == 1)
+    numGames = n;
+end
 
 averageScores = zeros(1, numGames);
 for i = 1:(n*m/numGames)
@@ -47,18 +52,14 @@ for i = 1:(n*m/numGames)
     end
 end
 
+% Average over the experiment trials, filter the remaining results
 averageScores = averageScores ./ (n*m/numGames);
-averageScores = filter(0.01*ones(1, 100), 1, averageScores);
-
-% rawData(2, :) = filter(0.01*ones(1, 100), 1, rawData(2, :));
-% rawData(3, :) = filter(0.01*ones(1, 100), 1, rawData(3, :));
-% rawData(4, :) = filter(0.01*ones(1, 100), 1, rawData(4, :));
+averageScores = filter(0.001*ones(1, 1000), 1, averageScores);
 
 if strcmp(learningAlgorithm, 'Epsilon-Greedy')
     plotTitle = ['Epsilon Greedy Agent; \epsilon = ', num2str(learningRate)];
 else
     plotTitle = [stateType, ' ', learningAlgorithm];
-    plotTitle = [plotTitle, '; \alpha = ', num2str(learningRate)];
 end
 
 if strcmp(plotType, 'Scores')
