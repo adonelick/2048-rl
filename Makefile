@@ -12,7 +12,7 @@ CC = g++
 CFLAGS  = -g -Wall -std=c++11
 
 # the build target executable:
-TARGETS = play2048 afterStateLearning qLearning stateLearning epsilonGreedy
+TARGETS = play2048 afterStateLearning qLearning stateLearning epsilonGreedy afterStateAgent
 
 all: $(TARGETS)
 
@@ -30,6 +30,9 @@ stateLearning: stateLearning.o game.o state.o ntnn.o
 
 epsilonGreedy: epsilonGreedy.o game.o state.o
 	$(CC) $(CFLAGS) -o epsilonGreedy epsilonGreedy.o game.o state.o
+
+afterStateAgent: afterStateAgent.o game.o state.o ntnn.o
+	$(CC) $(CFLAGS) -o afterStateAgent afterStateAgent.o state.o game.o ntnn.o
 
 clean:
 	$(RM) $(TARGETS) *.o
@@ -54,4 +57,6 @@ stateLearning.o: stateLearning.cpp game.hpp state.hpp ntnn.hpp
 	$(CC) -std=c++11 -c -o stateLearning.o stateLearning.cpp
 epsilonGreedy.o: epsilonGreedy.cpp game.hpp state.hpp
 	$(CC) -std=c++11 -c -o epsilonGreedy.o epsilonGreedy.cpp
+afterStateAgent.o: afterStateAgent.cpp state.hpp game.hpp ntnn.hpp
+	$(CC) -std=c++11 -c -o afterStateAgent.o afterStateAgent.cpp 
 	
